@@ -1,0 +1,68 @@
+version: '3'
+services:
+  strapi:
+    build:
+      context: ./strapi
+      dockerfile: Dockerfile
+    container_name: launchpad_strapi
+    environment:
+      - HOST=0.0.0.0
+      - PORT=1337 
+      - APP_KEYS=${APP_KEYS}
+      - API_TOKEN_SALT=${API_TOKEN_SALT}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - TRANSFER_TOKEN_SALT=${TRANSFER_TOKEN_SALT}
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - "1337:1337"
+    depends_on:
+      - postgres
+    volumes:
+      - ./strapi:/app
+      - /app/node_modules
+    networks:
+      - launchpad
+
+  nextjs:
+    build:
+      context: ./next
+      dockerfile: Dockerfile
+    container_name: launchpad_next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://strapi:1337
+      - NEXT_PUBLIC_WEBSITE_URL=${NEXT_PUBLIC_WEBSITE_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - strapi
+    volumes:
+      - ./next:/app
+      - /app/node_modules
+    networks:
+      - launchpad
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: launchpad_postgres
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - launchpad
+
+volumes:
+  postgres_data:
+
+networks:
+  launchpad:
+    driver: bridge
