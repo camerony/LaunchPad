@@ -8,7 +8,7 @@ RUN yarn install
 
 COPY . .
 
-RUN yarn build
+RUN yarn config set network-timeout 600000 -g && yarn install
 
 EXPOSE 1337
 

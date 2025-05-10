@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn install
+RUN yarn config set network-timeout 600000 -g && yarn install
 
 COPY . .
 
